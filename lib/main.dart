@@ -29,7 +29,7 @@ class ToDoApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'To-Do App',
       // تحديد الشاشة الافتراضية عند فتح التطبيق
-      initialRoute: AppRoutes.profile,
+      initialRoute: AppRoutes.addTask,
       routes: {
         AppRoutes.profile: (context) => const ProfileScreen(),
         AppRoutes.addTask: (context) => const AddTaskScreen(),
