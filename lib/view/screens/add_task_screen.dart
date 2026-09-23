@@ -1,4 +1,7 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:todo_app/data/model/task_model.dart';
 import 'package:todo_app/view/screens/widget/choose_color_widget.dart';
 
 
@@ -10,11 +13,10 @@ class AddTaskScreen extends StatefulWidget {
 }
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
-  String selectedStatus = 'Pending';
-  
-  // Controllers لو حابب تربط الحقول بـ Data بعدين
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
+  String dropdownButtonValue = 'Pending';
+  final TextEditingController titleTask = TextEditingController();
+  final TextEditingController desTask = TextEditingController();
+  int colorSelected = 4283215696; // القيمة الرقمية للون الظاهرة في الصورة
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +46,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             ),
             const SizedBox(height: 8),
             TextField(
-              controller: titleController,
+              controller: titleTask,
               decoration: InputDecoration(
                 hintText: 'Design Login Screen',
                 hintStyle: TextStyle(color: Colors.grey.shade400),
@@ -67,7 +69,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             ),
             const SizedBox(height: 8),
             TextField(
-              controller: descriptionController,
+              controller: desTask,
               maxLines: 4,
               decoration: InputDecoration(
                 hintText: 'Task Description...',
@@ -98,7 +100,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
-                  value: selectedStatus,
+                  value: dropdownButtonValue,
                   isExpanded: true,
                   items: ['Pending', 'Done'].map((String status) {
                     return DropdownMenuItem<String>(
@@ -108,7 +110,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   }).toList(),
                   onChanged: (String? newValue) {
                     setState(() {
-                      selectedStatus = newValue!;
+                      dropdownButtonValue = newValue!;
                     });
                   },
                 ),
@@ -122,7 +124,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
             ),
             const SizedBox(height: 12),
-            const ChooseColorWidget(), // استدعاء الـ Widget المنفصلة للألوان هنا
+            const ChooseColorWidget(), 
             const SizedBox(height: 40),
 
             // Save Task Button
@@ -136,8 +138,37 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                onPressed: () {
-                  // كود الحفظ أو الإرسال
+                onPressed: () async {
+                  log("Title: ${titleTask.text}");
+                  log("Des: ${desTask.text}");
+                  log("Status: $dropdownButtonValue");
+                  log("Color: $colorSelected");
+
+                 
+                  await Future.delayed(const Duration(seconds: 3));
+
+                  var taskBox = Hive.box<TaskModel>('Tasks');
+
+                  await taskBox
+                      .add(
+                        TaskModel(
+                          title: titleTask.text,
+                          description: desTask.text,
+                          status: dropdownButtonValue == "Pending"
+                              ? StatusTask.pending
+                              : StatusTask.done,
+                          colorHex: colorSelected,
+                        ),
+                      )
+                      .then((value) {
+                    Navigator.of(context).pop();
+                    titleTask.clear();
+                    desTask.clear();
+                    colorSelected = 4283215696;
+                  }).catchError((error) {
+                    Navigator.of(context).pop();
+                    
+                  });
                 },
                 child: const Text(
                   'Save Task',
