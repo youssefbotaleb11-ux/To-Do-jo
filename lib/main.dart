@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:todo_app/data/model/user_model.dart';
 import 'package:todo_app/view/screens/add_task_screen.dart';
 import 'package:todo_app/view/screens/home_screen.dart';
 import 'package:todo_app/view/screens/profile_screen.dart';
@@ -10,7 +12,11 @@ class AppRoutes {
   static const String profile = '/profile';
 }
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  Hive.registerAdapter(UserModelAdapter());
+  await Hive.openBox<UserModel>('User');
   runApp(const ToDoApp());
 }
 

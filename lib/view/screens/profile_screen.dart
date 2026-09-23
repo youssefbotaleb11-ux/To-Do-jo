@@ -1,5 +1,8 @@
+import 'dart:developer'; // مهم عشان الـ log
 import 'package:flutter/material.dart';
-import 'package:todo_app/view/screens/home_screen.dart'; // أو المسار لشاشة الـ Home عندك
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:todo_app/data/model/user_model.dart';
+import 'package:todo_app/view/screens/home_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -9,7 +12,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // مفتاح عشان نعمل validation للฟอร์م
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
 
@@ -17,6 +19,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
+  }
+
+  // دالة عرض اللودنج (AlertDialog)
+  Future<void> _showLoading() async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text("Loading..."),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -36,7 +57,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 20),
-                // أيقونة أو صورة البروفايل الدائرية زي التصميم
                 Center(
                   child: Container(
                     width: 100,
@@ -53,7 +73,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // عنوان Create Your Profile
                 const Text(
                   'Create Your Profile',
                   style: TextStyle(
@@ -63,7 +82,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // الوصف الصغير
                 Text(
                   'Add your name and profile picture',
                   style: TextStyle(
@@ -72,7 +90,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                // حقل الإدخال Full Name
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -100,7 +117,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       vertical: 16,
                     ),
                   ),
-                  // شرط الـ Validation لو الحقل فاضي
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your name';
@@ -109,29 +125,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
                 const Spacer(),
-                // زرار Continue العريض بلون كحلي غامق
                 SizedBox(
                   width: double.infinity,
                   height: 55,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // لو الـ Form سليم (مكتوب اسم) بينتقل للـ Home
+                  child: MaterialButton(
+                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const HomeScreen(),
-                          ),
-                        );
+                        log(_nameController.text);
+                        
+                        // 1. إظهار نافذة اللودنج
+                        _showLoading();
+
+                        // 2. حفظ الاسم في قاعدة البيانات المحلية Hive
+                        var userBox = Hive.box<UserModel>('User');
+                        await userBox
+                            .put("UserKey", UserModel(fullName: _nameController.text.trim()))
+                            .then((value) {
+                          print("Added User");
+                          
+                          // 3. إغلاق اللودنج ثم الانتقال للشاشة الرئيسية
+                          Navigator.pop(context); 
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const HomeScreen(),
+                            ),
+                          );
+                        }).catchError((error) {
+                          Navigator.pop(context); // إغلاق اللودنج في حالة حدوث خطأ
+                          print(error);
+                        });
                       }
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1E293B), // لون كحلي غامق قريب للتصميم
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 0,
+                    color: const Color(0xFF1E293B),
+                    padding: const EdgeInsets.all(10),
+                    minWidth: 300,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
                     ),
+                    elevation: 0,
                     child: const Text(
                       'Continue',
                       style: TextStyle(
