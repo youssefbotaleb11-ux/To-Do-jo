@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ChooseColorWidget extends StatefulWidget {
-  const ChooseColorWidget({super.key});
+  final Function(int) onColorChanged; // أضفنا الكولباك لاستقبال اللون
+  const ChooseColorWidget({super.key, required this.onColorChanged});
 
   @override
   State<ChooseColorWidget> createState() => _ChooseColorWidgetState();
@@ -14,7 +15,7 @@ class _ChooseColorWidgetState extends State<ChooseColorWidget> {
     0xFFFF9800, // برتقالي
     0xFF9C27B0, // بنفسجي
     0xFFF44336, // أحمر
-    0xFF009688, // تيل / تركواز
+    0xFF009688, // تركواز
   ];
 
   int selectedColorIndex = 0;
@@ -29,6 +30,8 @@ class _ChooseColorWidgetState extends State<ChooseColorWidget> {
             setState(() {
               selectedColorIndex = index;
             });
+            // إرسال الكود الخاص باللون المختار لشاشة الإضافة
+            widget.onColorChanged(colorsHex[index]);
           },
           child: Container(
             width: 35,

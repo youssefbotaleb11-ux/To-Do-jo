@@ -4,7 +4,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:todo_app/data/model/task_model.dart';
 import 'package:todo_app/view/screens/widget/choose_color_widget.dart';
 
-
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
 
@@ -16,7 +15,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   String dropdownButtonValue = 'Pending';
   final TextEditingController titleTask = TextEditingController();
   final TextEditingController desTask = TextEditingController();
-  int colorSelected = 4283215696; // القيمة الرقمية للون الظاهرة في الصورة
+  int colorSelected = 0xFF2196F3; // القيمة الافتراضية لأول لون (الأزرق)
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +38,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Task Title Label
             const Text(
               'Task Title',
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
@@ -61,8 +59,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Description Label
             const Text(
               'Description',
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
@@ -85,8 +81,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Status Dropdown Label
             const Text(
               'Status',
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
@@ -117,17 +111,20 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Choose Color Section
             const Text(
               'Choose Color',
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
             ),
             const SizedBox(height: 12),
-            const ChooseColorWidget(), 
+            // استقبال اللون المختّار وتحديثه في المتغير
+            ChooseColorWidget(
+              onColorChanged: (color) {
+                setState(() {
+                  colorSelected = color;
+                });
+              },
+            ), 
             const SizedBox(height: 40),
-
-            // Save Task Button
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -139,36 +136,30 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
                 onPressed: () async {
-                  log("Title: ${titleTask.text}");
-                  log("Des: ${desTask.text}");
-                  log("Status: $dropdownButtonValue");
-                  log("Color: $colorSelected");
+                  try {
+                    log("Title: ${titleTask.text}");
+                    log("Des: ${desTask.text}");
 
-                 
-                  await Future.delayed(const Duration(seconds: 3));
+                    var taskBox = Hive.box<TaskModel>('Tasks');
 
-                  var taskBox = Hive.box<TaskModel>('Tasks');
+                    await taskBox.add(
+                      TaskModel(
+                        title: titleTask.text,
+                        description: desTask.text,
+                        status: dropdownButtonValue == "Pending"
+                            ? StatusTask.pending
+                            : StatusTask.done,
+                        colorHex: colorSelected,
+                      ),
+                    );
 
-                  await taskBox
-                      .add(
-                        TaskModel(
-                          title: titleTask.text,
-                          description: desTask.text,
-                          status: dropdownButtonValue == "Pending"
-                              ? StatusTask.pending
-                              : StatusTask.done,
-                          colorHex: colorSelected,
-                        ),
-                      )
-                      .then((value) {
-                    Navigator.of(context).pop();
-                    titleTask.clear();
-                    desTask.clear();
-                    colorSelected = 4283215696;
-                  }).catchError((error) {
-                    Navigator.of(context).pop();
-                    
-                  });
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  } catch (e, stackTrace) {
+                    log("ERROR IN SAVE: $e");
+                    log("STACKTRACE: $stackTrace");
+                  }
                 },
                 child: const Text(
                   'Save Task',
