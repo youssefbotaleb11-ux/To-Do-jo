@@ -1,17 +1,10 @@
-# todo_app
+### Profile screen
+<img width="1080" height="2400" alt="Screenshot_1790215017" src="https://github.com/user-attachments/assets/28210d1b-ac75-4f80-9476-495e4c45e2fa" />
 
-A new Flutter project.
+### Home screen
+<img width="1080" height="2400" alt="Screenshot_1790215032" src="https://github.com/user-attachments/assets/15836e8c-fb71-4f77-9f9d-2a9407e8b80a" />
 
-## Getting Started
+### Add Task Screen
+<img width="1080" height="2400" alt="Screenshot_1790215052" src="https://github.com/user-attachments/assets/b835f42b-92d2-49c8-82f1-528889f81419" />
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
