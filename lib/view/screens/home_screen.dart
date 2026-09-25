@@ -100,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 24),
 
-              // 3. عنوان القسم مع فلاتر العرض (All, Pending, Done)
+              // 3. عنوان القسم مع زر مسح المهام المكتملة والفلاتر
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -112,9 +112,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.black,
                     ),
                   ),
-                  // أزرار الفلترة السريعة
                   Row(
                     children: [
+                      // زر مسح المهام المكتملة الجديدة
+                      IconButton(
+                        icon: const Icon(Icons.cleaning_services_outlined, color: Colors.redAccent, size: 20),
+                        tooltip: 'Clear Done Tasks',
+                        onPressed: () async {
+                          var box = Hive.box<TaskModel>('Tasks');
+                          var doneTasks = box.values.where((task) => task.status == StatusTask.done).toList();
+                          for (var task in doneTasks) {
+                            await task.delete();
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 4),
                       _buildFilterChip('All', 0),
                       const SizedBox(width: 6),
                       _buildFilterChip('Pending', 1),
@@ -131,7 +143,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ValueListenableBuilder(
                   valueListenable: Hive.box<TaskModel>('Tasks').listenable(),
                   builder: (context, Box<TaskModel> box, _) {
-                    // تطبيق الفلتر بناءً على اختيار المستخدم
                     var allTasks = box.values.toList();
                     var filteredTasks = allTasks.where((task) {
                       if (_selectedFilterIndex == 1) {
@@ -139,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       } else if (_selectedFilterIndex == 2) {
                         return task.status == StatusTask.done;
                       }
-                      return true; // الكل
+                      return true;
                     }).toList();
 
                     if (filteredTasks.isEmpty) {
@@ -159,7 +170,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         return Dismissible(
                           key: Key(task.key.toString()),
-                          // سحب لليمين للحذف
                           background: Container(
                             alignment: Alignment.centerLeft,
                             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -170,7 +180,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             child: const Icon(Icons.delete, color: Colors.white),
                           ),
-                          // سحب لليسار لتبديل الحالة (Done/Pending)
                           secondaryBackground: Container(
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -183,11 +192,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           confirmDismiss: (direction) async {
                             if (direction == DismissDirection.startToEnd) {
-                              // حذف المهمة
                               await task.delete();
-                              return false; // تم الحذف داخل الدالة بالفعل عبر Hive
+                              return false;
                             } else {
-                              // تبديل الحالة العكسية
                               task.status = isDone ? StatusTask.pending : StatusTask.done;
                               await task.save();
                               setState(() {});
@@ -196,7 +203,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                           child: GestureDetector(
                             onTap: () {
-                              // فتح نافذة تعديل اسم المهمة عند الضغط عليها[span_1](start_span)[span_1](end_span)
                               _showEditTaskDialog(context, task);
                             },
                             child: Container(
@@ -209,7 +215,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               child: Row(
                                 children: [
-                                  // شريط اللون الجانبي
                                   Container(
                                     width: 6,
                                     height: 40,
@@ -219,7 +224,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 12),
-                                  // عنوان الوصف
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,11 +250,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ],
                                     ),
                                   ),
-                                  // حالة المهمة
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: isDone ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                                      color: isDone ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
@@ -263,7 +266,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 4),
-                                  // زر الحذف اليدوي
                                   IconButton(
                                     icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
                                     onPressed: () async {
@@ -284,7 +286,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      // زر الإضافة العائم
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: const Color(0xFFE8EEF5),
         elevation: 0,
@@ -305,7 +306,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ويدجت زر الفلتر العلوي
   Widget _buildFilterChip(String label, int index) {
     bool isSelected = _selectedFilterIndex == index;
     return GestureDetector(
@@ -332,7 +332,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // دالة إظهار نافذة التعديل (Dialog)
   void _showEditTaskDialog(BuildContext context, TaskModel task) {
     TextEditingController controller = TextEditingController(text: task.title);
 
@@ -357,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () async {
                 if (controller.text.isNotEmpty) {
                   task.title = controller.text;
-                  await task.save(); // تحديث البيانات في Hive مباشرة
+                  await task.save();
                   Navigator.pop(context);
                 }
               },
@@ -369,7 +368,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // دوال مساعدة للإحصائيات
   Widget _buildStatItem(String count, String label) {
     return Column(
       children: [
@@ -385,7 +383,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             fontSize: 13,
           ),
         ),
@@ -397,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       height: 30,
       width: 1,
-      color: Colors.white.withOpacity(0.3),
+      color: Colors.white.withValues(alpha: 0.3),
     );
   }
 }
