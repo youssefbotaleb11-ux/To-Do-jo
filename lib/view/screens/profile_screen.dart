@@ -56,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               CustomTextFormField(
                 controller: nameController,
                 label: 'Full Name',
-                hint: 'Ahmed Abdelsattar',
+                hint: 'Enter your name',
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter your name';
